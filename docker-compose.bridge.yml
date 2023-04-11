@@ -1,0 +1,45 @@
+version: '3'
+
+services:
+  tti-ran-bridge:
+    build: .
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+
+      - TTI_GRPC_API_HOST=${TTI_GRPC_API_HOST:-stack}
+      - TTI_GRPC_API_PORT=${TTI_GRPC_API_PORT:-1884}
+      - TTI_GRPC_API_SECURE=${TTI_GRPC_API_SECURE:-False}
+      - TTI_GRPC_API_CERT_PATH=${TTI_GRPC_API_CERT_PATH:-}
+      - TTI_GRPC_API_TOKEN
+
+      - TTI_GW_MQTT_HOST=${TTI_GW_MQTT_HOST:-stack}
+      - TTI_GW_MQTT_PORT=${TTI_GW_MQTT_PORT:-1882}
+      - TTI_GW_MQTT_SECURE=${TTI_GW_MQTT_SECURE:-False}
+      - TTI_GW_MQTT_CERT_PATH=${TTI_GW_MQTT_CERT_PATH:-}
+      - TTI_GW_MQTT_TOKEN=${TTI_GW_MQTT_TOKEN:-}
+
+      - TTI_GATEWAY_ID=${TTI_GATEWAY_ID:-eui-000000000000c0de}
+      - TTI_TENANT_ID
+
+      - RAN_API_URL
+      - RAN_API_TOKEN
+
+      - BRIDGE_DEVICE_MATCH_TAGS=${BRIDGE_DEVICE_MATCH_TAGS:-everynet=true}
+      - BRIDGE_DEVICES_REFRESH_PERIOD=${BRIDGE_DEVICES_REFRESH_PERIOD:-300}
+
+      - BRIDGE_LOG_LEVEL=${BRIDGE_LOG_LEVEL:-debug}
+      - BRIDGE_LOG_COLORS=${BRIDGE_LOG_COLORS:-True}
+      - BRIDGE_LOG_JSON=${BRIDGE_LOG_JSON:-False}
+
+      - BRIDGE_HEALTHCHECK_SERVER_HOST=${BRIDGE_HEALTHCHECK_SERVER_HOST:-0.0.0.0}
+      - BRIDGE_HEALTHCHECK_SERVER_PORT=${BRIDGE_HEALTHCHECK_SERVER_PORT:-9090}
+
+    # logging:
+    #   driver: 'json-file'
+    #   options:
+    #     max-size: "100m"
+    #     max-file: "1"
+    depends_on:
+      - stack
+

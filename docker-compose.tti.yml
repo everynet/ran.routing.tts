@@ -1,0 +1,77 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres:14
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+      - POSTGRES_DB=ttn_lorawan_dev
+    volumes:
+      - ${DEV_DATA_DIR:-.docker-env/data}/postgres:/var/lib/postgresql/data
+      - .docker-env/cache:/var/lib/ttn-lorawan/cache
+    ports:
+      - "127.0.0.1:5432:5432"
+
+  redis:
+    # TODO: Support latest Redis (7.x is not supported, see https://github.com/TheThingsNetwork/lorawan-stack/issues/5416)
+    image: redis:6.2
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    volumes:
+      - ${DEV_DATA_DIR:-.docker-env/data}/redis:/data
+    ports:
+      - "127.0.0.1:6379:6379"
+
+  stack:
+    image: thethingsnetwork/lorawan-stack
+    entrypoint: ttn-lw-stack -c /config/ttn-lw-stack-docker.yml
+    command: start
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - postgres
+    volumes:
+      - ${DEV_DATA_DIR:-.docker-env/blob}:/srv/ttn-lorawan/public/blob
+      - ./docker-data/config/stack:/config:ro
+      - ./docker-data/client_config:/home/thethings/.config/:ro
+      # If using Let's Encrypt:
+      # - ./acme:/var/lib/acme
+    environment:
+      TTN_LW_BLOB_LOCAL_DIRECTORY: /srv/ttn-lorawan/public/blob
+      TTN_LW_REDIS_ADDRESS: redis:6379
+      TTN_LW_IS_DATABASE_URI: postgres://root:root@postgres:5432/ttn_lorawan_dev?sslmode=disable
+
+    ports:
+      # If deploying on a public server:
+      # - "80:1885"
+      # - "443:8885"
+
+      - "1881:1881"
+      - "8881:8881"
+      - "1882:1882"
+      - "8882:8882"
+      - "1883:1883"
+      - "8883:8883"
+      - "1884:1884"
+      - "8884:8884"
+      - "1885:1885"
+      - "8885:8885"
+      - "1887:1887"
+      - "8887:8887"
+      - "1700:1700/udp"
+
+    # If using custom certificates:
+    secrets:
+      - ca.pem
+      - cert.pem
+      - key.pem
+
+# If using custom certificates:
+secrets:
+  ca.pem:
+    file: ./docker-data/certs/ca.pem
+  cert.pem:
+    file: ./docker-data/certs/cert.pem
+  key.pem:
+    file: ./docker-data/certs/key.pem
